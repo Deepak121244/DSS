@@ -1,0 +1,22 @@
+DSS CODE:
+
+import org.apache.spark.graphx.{Graph, GraphLoader}
+
+// Load the graph from a space-separated dataset
+val graph = GraphLoader.edgeListFile(sc,"./data/graphx/email-EuAll.txt",false)
+
+val connectedComponents = graph.connectedComponents().vertices
+
+// Calculate the size of each connected component
+val componentSizes = connectedComponents
+  .map { case (id, componentId) => (componentId, 1) }
+  .reduceByKey(_ + _)
+
+// Print the top 20 sized connected components
+println("\nTop 10 sized connected components:")
+componentSizes.takeOrdered(10)(Ordering[Int].reverse.on { case (componentId, size) => size })
+  .foreach { case (componentId, size) =>
+    println(s"Component $componentId has size: $size")
+  }
+
+sc.stop()
